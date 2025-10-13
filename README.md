@@ -201,11 +201,10 @@ interface IOrder {
 Конструктор:
 
 ```typescript
-constructor(baseUrl: string = API_URL)
-baseUrl: string - базовый URL API сервера (по умолчанию берется из констант)
+constructor(baseApi: Api) { this.baseApi = baseApi; }
 ```
 Поля класса:  
-`private api: Api` - экземпляр базового класса Api для выполнения HTTP-запросов
+`private baseApi: Api` - экземпляр базового класса Api для выполнения HTTP-запросов
 
 Методы класса:  
 `getProductList(): Promise<IProduct[]>` - выполняет GET-запрос для получения списка товаров
