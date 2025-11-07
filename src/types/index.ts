@@ -25,10 +25,12 @@ export interface IBuyer {
 
 // Данные для отправки заказа на сервер
 export interface IOrder {
-	payment: string;
 	email: string;
 	phone: string;
 	address: string;
+	payment: PaymentMethod;
+	items: string[];
 	total: number;
-	items: string[]; // массив id товаров
 }
+
+export type PaymentMethod = 'card' | 'cash';

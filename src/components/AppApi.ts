@@ -1,6 +1,5 @@
 import { Api } from './base/Api';
 import { IProduct, IOrder } from '../types';
-// import { API_URL } from '../../utils/constants';
 
 export class AppApi {
 	private baseApi: Api;

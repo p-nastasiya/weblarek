@@ -1,13 +1,25 @@
 import './scss/styles.scss';
 
+import { EventEmitter } from './components/base/Events';
 import { ProductModel } from './components/models/ProductModel';
 import { CartModel } from './components/models/CartModel';
 import { BuyerModel } from './components/models/BuyerModel';
 import { AppApi } from './components/AppApi';
+import { Presenter } from './components/Presenter';
 import { API_URL } from './utils/constants';
 import { Api } from './components/base/Api';
 
+console.log('=== Запуск приложения ===');
+
+// Проверяем наличие необходимых элементов
+console.log('Проверка DOM элементов:');
+console.log('- Галерея:', document.querySelector('.gallery'));
+console.log('- Modal container:', document.getElementById('modal-container'));
+console.log('- Basket template:', document.getElementById('basket'));
+console.log('- Card catalog template:', document.getElementById('card-catalog'));
+
 // Создаём экземпляры моделей
+const events = new EventEmitter();
 const productModel = new ProductModel();
 const cartModel = new CartModel();
 const buyerModel = new BuyerModel();
@@ -17,109 +29,53 @@ const baseApi = new Api(API_URL);
 const api = new AppApi(baseApi);
 console.log('API URL:', API_URL);
 
-// Тестируем ВСЕ методы моделей данных
-async function testAllModels() {
-	console.log('=== Тестирование всех методов моделей данных ===');
+console.log('Модели созданы');
 
-	// Тестируем ProductModel
-	console.log('--- ProductModel ---');
-	const testProducts = [
-		{
-			id: 'test-1',
-			title: 'Тестовый товар 1',
-			price: 1000,
-			description: 'Описание тестового товара 1',
-			image: 'test1.jpg',
-			category: 'софт-скил'
-		},
-		{
-			id: 'test-2',
-			title: 'Тестовый товар 2',
-			price: 2000,
-			description: 'Описание тестового товара 2',
-			image: 'test2.jpg',
-			category: 'хард-скил'
-		}
-	];
+// Создаём Presenter
+let presenter: Presenter;
 
-	// Тестируем все методы ProductModel
-	productModel.setItems(testProducts);
-	console.log('getItems():', productModel.getItems());
-	console.log('getItem("test-1"):', productModel.getItem('test-1'));
-
-	const selectedProduct = testProducts[0];
-	productModel.setSelectedProduct(selectedProduct);
-	console.log('getSelectedProduct():', productModel.getSelectedProduct());
-
-	// Тестируем CartModel
-	console.log('--- CartModel ---');
-	cartModel.addItem(testProducts[0]);
-	cartModel.addItem(testProducts[1]);
-	console.log('getItems():', cartModel.getItems());
-	console.log('getTotal():', cartModel.getTotal());
-	console.log('getCount():', cartModel.getCount());
-	console.log('hasItem("test-1"):', cartModel.hasItem('test-1'));
-
-	cartModel.removeItem('test-1');
-	console.log('После removeItem("test-1"):', cartModel.getItems());
-
-	cartModel.clear();
-	console.log('После clear():', cartModel.getItems());
-
-	// Тестируем BuyerModel
-	console.log('--- BuyerModel ---');
-	buyerModel.setData({ email: 'test@example.com' });
-	console.log('getData() после setData(email):', buyerModel.getData());
-
-	buyerModel.setData({ phone: '+79991234567', address: 'Test Address' });
-	console.log('getData() после setData(phone, address):', buyerModel.getData());
-
-	console.log('isValid() без payment:', buyerModel.isValid());
-	console.log('validate() без payment:', buyerModel.validate());
-
-	buyerModel.setData({ payment: 'card' });
-	console.log('isValid() с payment:', buyerModel.isValid());
-	console.log('validate() с payment:', buyerModel.validate());
-
-	buyerModel.clear();
-	console.log('getData() после clear():', buyerModel.getData());
+try {
+	presenter = new Presenter(events, productModel, cartModel, buyerModel, api);
+	console.log('Presenter создан успешно');
+} catch (error) {
+	console.error('Ошибка создания Presenter:', error);
 }
 
-// Получаем данные с сервера и сохраняем в модель
-async function loadProductsFromServer() {
+// Загружаем товары и инициализируем приложение
+async function initApp() {
 	try {
-		console.log('=== Загрузка данных с сервера ===');
-
+		console.log('Загрузка товаров с сервера...');
 		const products = await api.getProductList();
 		productModel.setItems(products);
+		events.emit('items:changed');
 
-		console.log('Товары с сервера сохранены в модель');
-		console.log('Количество товаров:', productModel.getItems().length);
-		console.log('Первый товар:', productModel.getItems()[0]);
-
+		console.log('Приложение инициализировано');
 	} catch (error) {
-		console.error('Ошибка загрузки данных с сервера:', error);
+		console.error('Ошибка загрузки товаров:', error);
 
-		// Используем тестовые данные как fallback
+		// Используем тестовые данные
 		const { apiProducts } = await import('./utils/data');
 		productModel.setItems(apiProducts.items);
-		console.log('Используем тестовые данные из data.ts');
-		console.log('Количество тестовых товаров:', productModel.getItems().length);
+		events.emit('items:changed');
+	}
+	console.log('=== Инициализация завершена ===');
+}
+
+// Инициализация корзины в хедере
+function initHeaderBasket() {
+	const basketButton = document.querySelector('.header__basket');
+	if (basketButton) {
+		basketButton.addEventListener('click', () => {
+			events.emit('basket:open');
+		});
+	} else {
+		console.warn('Элемент .header__basket не найден в DOM');
 	}
 }
 
-// Инициализация приложения
-async function initApp() {
-	// Тестируем все методы моделей
-	await testAllModels();
 
-	// Загружаем данные с сервера
-	await loadProductsFromServer();
-
-	console.log('=== Приложение инициализировано ===');
-	console.log('Все модели данных работают корректно');
-	console.log('Данные загружены и сохранены в модели');
-}
 
 // Запускаем приложение
+initHeaderBasket();
 initApp();
+
