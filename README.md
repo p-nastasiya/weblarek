@@ -211,3 +211,172 @@ constructor(baseApi: Api) { this.baseApi = baseApi; }
 `createOrder(order: IOrder): Promise<{ id: string }>` - выполняет POST-запрос для отправки данных заказа на сервер
 `get baseUrl(): string` - геттер для получения базового URL API
 
+## Визуализация (view)
+
+### Modal (Modal.ts) 
+Класс для управления модальными окнами в приложении.
+
+Методы класса:
+`open()` - открывает модальное окно
+`close()` - закрывает модальное окно и очищает содержимое
+`set content(value: HTMLElement)` - устанавливает содержимое модального окна
+`handleEscape()` - обработчик закрытия по клавише Escape
+
+### Basket (Basket.ts)
+Класс для управления корзиной покупок.
+
+Методы класса:
+
+`set items(items: HTMLElement[])` - устанавливает список товаров
+`set total(value: number)` - устанавливает общую стоимость
+`set selected(items: IProduct[])` - обновляет состояние корзины
+`updateEmptyState()` - управляет отображением сообщения о пустой корзине
+
+### Card (Card.ts)
+Класс для отображения карточек товаров.
+
+Ключевые свойства:
+
+`id` - уникальный идентификатор товара
+`title` - название товара
+`description` - описание товара
+`image` - изображение товара
+`category` - категория с соответствующим стилем
+`price` - цена (поддерживает значение "Бесценно")
+`selected` - состояние товара в корзине
+
+Все классы наследуются от базового `Component`, что обеспечивает единообразие в работе с DOM-элементами и переиспользование общей логики.
+
+## Управление бизнес логикой
+
+### Presenter (Presenter.ts)
+Главный презентер-класс приложения, который управляет всей бизнес-логикой, координирует взаимодействие между моделями, представлениями и сервисами.
+
+Архитектурная роль
+Presenter реализует паттерн MVP (Model-View-Presenter) и выступает в качестве:
+Координатора между моделями данных и UI-компонентами
+Обработчика пользовательских действий
+Управляющего состоянием приложения
+Валидатора данных форм
+
+graph TD
+    A[Presenter] --> B[EventEmitter]
+    A --> C[ProductModel]
+    A --> D[CartModel]
+    A --> E[BuyerModel]
+    A --> F[AppApi]
+    A --> G[Modal View]
+    A --> H[Basket View]
+    A --> I[Card Views]
+
+Приватные методы
+Инициализация
+`initViews()` - создает основные представления (модальное окно, корзину)
+`initModal()` - инициализирует модальное окно
+`initBasket()` - создает представление корзины
+`initEventListeners()` - настраивает обработчики событий
+
+Управление товарами
+`renderProducts()` - отображает список товаров в галерее
+`createProductCard(product, container)` - создает карточку товара
+`setCardData(card, product)` - заполняет данные карточки
+`openProductModal(product)` - открывает модальное окно с деталями товара
+
+Работа с корзиной
+`toggleCart(product)` - добавляет/удаляет товар из корзины
+`openBasket()` - открывает корзину
+`updateBasketItems()` - обновляет содержимое корзины
+`createBasketItem(item, index)` - создает элемент корзины
+`removeFromCart(id)` - удаляет товар из корзины
+`updateCart()` - обновляет счетчик корзины в хедере
+
+Оформление заказа
+`openOrderForm()` - открывает форму заказа для выбора способа оплаты и ввода адреса доставки (шаг 1)
+`setupOrderForm(formElement)` - настраивает форму заказа
+`validateOrderStep()` - валидация первого шага заказа
+`openContactForm(paymentMethod, address)` - открывает форму контактов для ввода электронной почты и номера телефона (2 шаг)
+`setupContactForm(formElement, paymentMethod, address)` - настраивает форму контактов
+`validateContactStep()` - валидация второго шага заказа
+
+Валидация и утилиты
+`validateEmail(email)` - проверяет корректность email
+`validatePhone(phone)` - проверяет корректность телефона
+`showSuccessModal(total)` - показывает окно успешного заказа
+
+Отправка данных
+`submitOrder(orderData)` - отправляет заказ на сервер и обрабатывает результат
+
+
+## Структура приложения
+.
+├── css
+├── index.html
+├── package.json
+├── package-lock.json
+├── public
+│   ├── < Картинки >
+├── README.md
+├── src
+│   ├── common.blocks
+│   │   ├── basket.scss
+│   │   ├── < остальные файлы scss >
+│   ├── components
+│   │   ├── AppApi.ts
+│   │   ├── base
+│   │   │   ├── Api.ts
+│   │   │   ├── Component.ts
+│   │   │   └── Events.ts
+│   │   ├── models
+│   │   │   ├── BuyerModel.ts
+│   │   │   ├── CartModel.ts
+│   │   │   └── ProductModel.ts
+│   │   ├── Presenter.ts
+│   │   └── view
+│   │       ├── Basket.ts
+│   │       ├── Modal.ts
+│   │       └── Сard.ts
+│   ├── images
+│   │   ├── logo.svg
+│   │   ├── shopping_cart.svg
+│   │   ├── Subtract.png
+│   │   ├── Subtract.svg
+│   │   ├── trash-2.svg
+│   │   ├── trash.svg
+│   │   └── x-circle.svg
+│   ├── main.ts
+│   ├── pages
+│   │   └── index.html
+│   ├── scss
+│   │   ├── mixins
+│   │   │   ├── _background.scss
+│   │   │   ├── _container.scss
+│   │   │   ├── _fix.scss
+│   │   │   ├── _icon.scss
+│   │   │   ├── _index.scss
+│   │   │   └── _interactive.scss
+│   │   ├── styles.scss
+│   │   └── _variables.scss
+│   ├── types
+│   │   └── index.ts
+│   ├── utils
+│   │   ├── constants.ts
+│   │   ├── data.ts
+│   │   └── utils.ts
+│   ├── vendor
+│   │   ├── garamond
+│   │   │   ├── EBGaramond-Regular.ttf
+│   │   │   ├── EBGaramond-Regular.woff2
+│   │   │   └── index.css
+│   │   ├── glyphter
+│   │   │   ├── Glyphter.eot
+│   │   │   ├── Glyphter.svg
+│   │   │   ├── Glyphter.ttf
+│   │   │   ├── Glyphter.woff
+│   │   │   └── index.css
+│   │   ├── normalize.css
+│   │   └── ys-text
+│   │       ├── index.css
+│   │       ├── <шрифты>
+│   └── vite-env.d.ts
+├── tsconfig.json
+└── vite.config.ts

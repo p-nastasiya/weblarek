@@ -28,6 +28,7 @@ export class Presenter {
 	private modal!: Modal;
 	private basket!: Basket;
 
+	//Конструктор инициализирует презентер с зависимостями и запускает инициализацию представлений.
 	constructor(
 		events: EventEmitter,
 		productModel: ProductModel,
