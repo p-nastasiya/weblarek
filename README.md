@@ -8,6 +8,13 @@
 - src/ — исходные файлы проекта
 - src/components/ — папка с JS компонентами
 - src/components/base/ — папка с базовым кодом
+- src/components/models/ — папка с моделями данных
+- src/components/views/ — папка с представлениями
+- src/scss/ — папка со стилями
+- src/utils/ — папка с утилитами
+- src/types/ — папка с типами TypeScript
+- src/vendor/ — папка со шрифтами и сторонними библиотеками
+- public/ — папка с публичными файлами (иконки, манифест)
 ```
 
 **Важные файлы:**
@@ -77,7 +84,10 @@ constructor(container: HTMLElement)
 
 **Методы класса:**
 - `render(data?: Partial<T>): HTMLElement` - Главный метод класса. Он принимает данные, которые необходимо отобразить в интерфейсе, записывает эти данные в поля класса и возвращает ссылку на DOM-элемент
-- `setImage(element: HTMLImageElement, src: string, alt?: string): void` - утилитарный метод для модификации DOM-элементов `<img>`
+- `setText(element: HTMLElement | null, value: string): void` - устанавливает текстовое содержимое элемента
+- `setDisabled(element: HTMLElement | null, state: boolean): void` - управляет состоянием disabled элемента
+- `setImage(element: HTMLImageElement | null, src: string, alt?: string): void` - утилитарный метод для модификации DOM-элементов `<img>`
+- `ensureElement<T extends HTMLElement>(selector: string): T` - вспомогательный метод для безопасного получения элемента
 
 #### Класс Api
 
@@ -94,9 +104,9 @@ constructor(baseUrl: string, options: RequestInit = {})
 - `options: RequestInit` - объект с заголовками, которые будут использованы для запросов
 
 **Методы:**
-- `get(uri: string): Promise<object>` - выполняет GET запрос на переданный в параметрах ендпоинт и возвращает промис с объектом, которым ответил сервер
-- `post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object>` - принимает объект с данными, которые будут переданы в JSON в теле запроса, и отправляет эти данные на ендпоинт переданный как параметр при вызове метода
-- `handleResponse(response: Response): Promise<object>` - защищенный метод проверяющий ответ сервера на корректность и возвращающий объект с данными полученный от сервера или отклоненный промис, в случае некорректных данных
+- `get<T extends object>(uri: string): Promise<T>` - выполняет GET запрос на переданный в параметрах ендпоинт и возвращает промис с объектом, которым ответил сервер
+- `post<T extends object>(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<T>` - принимает объект с данными, которые будут переданы в JSON в теле запроса, и отправляет эти данные на ендпоинт переданный как параметр при вызове метода
+- `handleResponse<T>(response: Response): Promise<T>` - защищенный метод проверяющий ответ сервера на корректность и возвращающий объект с данными полученный от сервера или отклоненный промис, в случае некорректных данных
 
 #### Класс EventEmitter
 
@@ -109,8 +119,11 @@ constructor(baseUrl: string, options: RequestInit = {})
 
 **Методы класса:**
 - `on<T extends object>(event: EventName, callback: (data: T) => void): void` - подписка на событие, принимает название события и функцию обработчик
-- `emit<T extends object>(event: string, data?: T): void` - инициализация события. При вызове события в метод передается название события и объект с данными, который будет использован как аргумент для вызова обработчика
-- `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие с передачей в него данных из второго параметра
+- `off(eventName: EventName, callback: Subscriber): void` - отписка от события
+- `emit<T extends object>(eventName: string, data?: T): void` - инициализация события. При вызове события в метод передается название события и объект с данными, который будет использован как аргумент для вызова обработчика
+- `onAll(callback: (event: EmitterEvent) => void): void` - подписка на все события
+- `offAll(): void` - сброс всех обработчиков
+- `trigger<T extends object>(eventName: string, context?: Partial<T>): (data: T) => void` - возвращает функцию, при вызове которой инициализируется требуемое в параметрах событие с передачей в него данных из второго параметра
 
 ## Данные
 
@@ -165,33 +178,36 @@ interface IOrder {
 
 Отвечает за хранение и управление данными каталога товаров. Сохраняет массив всех товаров и текущий выбранный товар для детального просмотра.
 
-**Конструктор класса** не принимает параметров.
+**Конструктор класса:**
+```typescript
+constructor(private events: IEvents)
+```
 
 **Поля класса:**
 - `private _items: IProduct[]` - массив всех товаров каталога
-- `private _selectedProduct: IProduct | null` - товар, выбранный для подробного отображения
 
 **Методы класса:**
-- `setItems(items: IProduct[]): void` - сохраняет массив товаров в модель
+- `setItems(items: IProduct[]): void` - сохраняет массив товаров в модель и эмитирует событие 'products:changed'
 - `getItems(): IProduct[]` - возвращает массив всех товаров
 - `getItem(id: string): IProduct | undefined` - возвращает товар по его идентификатору
-- `setSelectedProduct(product: IProduct): void` - сохраняет товар для детального просмотра
-- `getSelectedProduct(): IProduct | null` - возвращает выбранный для просмотра товар
 
 ### CartModel - модель корзины покупок
 
 Управляет товарами, выбранными пользователем для покупки. Отвечает за добавление, удаление товаров из корзины, подсчет общей стоимости и количества товаров.
 
-**Конструктор класса** не принимает параметров.
+**Конструктор класса:**
+```typescript
+constructor(event: IEvents)
+```
 
 **Поля класса:**
 - `private _items: IProduct[]` - массив товаров, добавленных в корзину
 
 **Методы класса:**
 - `getItems(): IProduct[]` - возвращает массив товаров в корзине
-- `addItem(item: IProduct): void` - добавляет товар в корзину
-- `removeItem(id: string): void` - удаляет товар из корзины по идентификатору
-- `clear(): void` - полностью очищает корзину
+- `addItem(item: IProduct): void` - добавляет товар в корзину и эмитирует событие 'cart:change'
+- `removeItem(id: string): void` - удаляет товар из корзины по идентификатору и эмитирует событие 'cart:change'
+- `clear(): void` - полностью очищает корзину и эмитирует событие 'cart:change'
 - `getTotal(): number` - возвращает общую стоимость всех товаров в корзине
 - `getCount(): number` - возвращает количество товаров в корзине
 - `hasItem(id: string): boolean` - проверяет наличие товара в корзине по идентификатору
@@ -211,6 +227,10 @@ interface IOrder {
 - `clear(): void` - очищает все данные покупателя
 - `validate(): Record<string, string>` - возвращает объект с ошибками валидации (ключ - название поля, значение - текст ошибки)
 - `isValid(): boolean` - проверяет, все ли данные покупателя валидны
+- `validateFirstStep(): Record<string, string>` - валидация первого шага (оплата и адрес)
+- `validateSecondStep(): Record<string, string>` - валидация второго шага (контакты)
+- `isFirstStepValid(): boolean` - проверка валидности первого шага
+- `isSecondStepValid(): boolean` - проверка валидности второго шага
 
 ## Слой коммуникации
 
@@ -220,15 +240,15 @@ interface IOrder {
 
 **Конструктор:**
 ```typescript
-constructor(baseApi: Api) { this.baseApi = baseApi; }
+constructor(api: Api) { this.api = api; }
 ```
 
 **Поля класса:**
-- `private baseApi: Api` - экземпляр базового класса Api для выполнения HTTP-запросов
+- `private api: Api` - экземпляр базового класса Api для выполнения HTTP-запросов
 
 **Методы класса:**
 - `getProductList(): Promise<IProduct[]>` - выполняет GET-запрос для получения списка товаров
-- `createOrder(order: IOrder): Promise<{ id: string }>` - выполняет POST-запрос для отправки данных заказа на сервер
+- `createOrder(order: IOrder): Promise<{ id: string, total: number }>` - выполняет POST-запрос для отправки данных заказа на сервер
 - `get baseUrl(): string` - геттер для получения базового URL API
 
 ## Визуализация (View)
@@ -245,6 +265,7 @@ constructor(baseApi: Api) { this.baseApi = baseApi; }
 - `open()` - открывает модальное окно, добавляя CSS-класс modal_active
 - `close()` - закрывает модальное окно, удаляя CSS-класс и очищая содержимое
 - `set content(value: HTMLElement)` - устанавливает содержимое в модальное окно
+- `get modalContainer(): HTMLElement` - геттер для доступа к контейнеру модального окна
 
 Обработчики закрытия по клику на крестик, клику вне контента и клавише Escape.
 
@@ -508,3 +529,22 @@ graph LR
     A[API] -->|Data| Mo
     Mo -->|Events| A
 ```
+
+## Основные события приложения
+
+- `'products:changed'` - изменение списка товаров
+- `'card:select'` - выбор товара для просмотра
+- `'product:toggle-cart'` - добавление/удаление товара из корзины
+- `'cart:change'` - изменение содержимого корзины
+- `'basket:open'` - открытие корзины
+- `'basket:item-remove'` - удаление товара из корзины
+- `'basket:checkout'` - переход к оформлению заказа
+- `'order:payment-change'` - изменение способа оплаты
+- `'order:address-change'` - изменение адреса доставки
+- `'order:submit'` - отправка первого шага заказа
+- `'contacts:email-change'` - изменение email
+- `'contacts:phone-change'` - изменение телефона
+- `'contacts:submit'` - отправка второго шага заказа
+- `'success:close'` - закрытие окна успеха
+- `'modal:open'` - открытие модального окна
+- `'modal:close'` - закрытие модального окна
