@@ -2,16 +2,16 @@ import { Api } from './base/Api';
 import { IProduct, IOrder } from '../types';
 
 export class AppApi {
-	private baseApi: Api;
+	private api: Api;
 
-	constructor(baseApi: Api) {
-		this.baseApi = baseApi;
+	constructor(api: Api) {
+		this.api = api;
 	}
 
 	// Получить список товаров
 	async getProductList(): Promise<IProduct[]> {
 		try {
-			const response = await this.baseApi.get<{ items: IProduct[] }>('/product');
+			const response = await this.api.get<{ items: IProduct[] }>('/product');
 			return response.items;
 		} catch (error) {
 			console.error('Ошибка в getProductList:', error);
@@ -20,12 +20,12 @@ export class AppApi {
 	}
 
 	// Отправить заказ
-	async createOrder(order: IOrder): Promise<{ id: string }> {
-		return await this.baseApi.post<{ id: string }>('/order', order);
+	async createOrder(order: IOrder): Promise<{ id: string, total: number }> {
+		return await this.api.post<{ id: string, total: number }>('/order', order);
 	}
 
 	// Геттер для baseUrl (для отладки)
 	get baseUrl(): string {
-		return this.baseApi.baseUrl;
+		return this.api.baseUrl;
 	}
 }

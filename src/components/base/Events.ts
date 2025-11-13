@@ -20,6 +20,7 @@ export interface IEvents {
  */
 export class EventEmitter implements IEvents {
 	_events: Map<EventName, Set<Subscriber>>;
+	once: any;
 
 	constructor() {
 		this._events = new Map<EventName, Set<Subscriber>>();

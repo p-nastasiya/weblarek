@@ -20,3 +20,12 @@ export const settings = {
 
 };
 
+
+// Константы для сообщений об ошибках
+export const ERROR_MESSAGES = {
+	ADDRESS_REQUIRED: 'Необходимо указать адрес',
+	PAYMENT_REQUIRED: 'Необходимо выбрать способ оплаты',
+	EMAIL_REQUIRED: 'Необходимо указать email',
+	PHONE_REQUIRED: 'Необходимо указать телефон',
+	ORDER_ERROR: 'Ошибка при оформлении заказа'
+};

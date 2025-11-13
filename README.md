@@ -160,7 +160,8 @@ interface IOrder {
 `setSelectedProduct(product: IProduct): void` - сохраняет товар для детального просмотра
 `getSelectedProduct(): IProduct | null` - возвращает выбранный для просмотра товар
 
-### CartModel - модель корзины покупок
+### Card
+Model - модель корзины покупок
 Управляет товарами, выбранными пользователем для покупки. Отвечает за добавление, удаление товаров из корзины, подсчет общей стоимости и количества товаров.
 
 Конструктор класса не принимает параметров.
@@ -213,170 +214,216 @@ constructor(baseApi: Api) { this.baseApi = baseApi; }
 
 ## Визуализация (view)
 
-### Modal (Modal.ts) 
-Класс для управления модальными окнами в приложении.
+Классы представлений и их функциональность
+### ModalView - управление модальными окнами
+Назначение: Контролирует отображение и скрытие модальных окон, обработку закрытия.
 
-Методы класса:
-`open()` - открывает модальное окно
-`close()` - закрывает модальное окно и очищает содержимое
-`set content(value: HTMLElement)` - устанавливает содержимое модального окна
-`handleEscape()` - обработчик закрытия по клавише Escape
+Поля класса:
 
-### Basket (Basket.ts)
-Класс для управления корзиной покупок.
+`closeButton: HTMLButtonElement` - кнопка закрытия модального окна
+`contentElement: HTMLElement` - контейнер для содержимого модального окна
 
 Методы класса:
 
-`set items(items: HTMLElement[])` - устанавливает список товаров
+`open()` - открывает модальное окно, добавляя CSS-класс modal_active
+`close()` - закрывает модальное окно, удаляя CSS-класс и очищая содержимое
+
+`set content(value: HTMLElement)` - устанавливает содержимое в модальное окно
+
+Обработчики закрытия по клику на крестик, клику вне контента и клавише Escape
+
+### HeaderView - отображение шапки приложения
+Назначение: Управляет отображением счетчика товаров в корзине и обработкой клика по корзине.
+
+Поля класса:
+
+`counterElement: HTMLElement` - элемент для отображения количества товаров в корзине
+`basketButton: HTMLElement` - кнопка корзины для открытия модального окна
+
+Методы класса:
+
+`set counter(value: number)` - обновляет отображаемое количество товаров в корзине
+
+Обработчик клика по корзине, эмитирующий событие `'basket:open'`
+
+### GalleryView - отображение каталога товаров
+Назначение: Рендерит сетку товаров и обрабатывает выбор товаров для просмотра.
+
+Поля класса:
+
+`productModel: ProductModel` - модель данных товаров для получения информации
+
+Методы класса:
+`set items(products: IProduct[])` - отображает массив товаров в виде карточек
+`createProductCard(product: IProduct)` - создает DOM-элемент карточки товара
+
+Обработчик клика по карточке, эмитирующий событие `'card:select'`
+
+### ProductCardView - базовая карточка товара
+Назначение: Базовый класс для отображения основных данных товара.
+
+Поля класса:
+`titleElement: HTMLElement` - элемент для названия товара
+`priceElement: HTMLElement` - элемент для цены товара
+
+Методы класса:
+`set title(value: string)` - устанавливает название товара
+`set price(value: number | null)` - устанавливает цену товара (поддерживает значение "Бесценно")
+
+### ProductPreviewView - детальное превью товара
+Назначение: Расширенное представление товара с полным описанием и кнопкой действия.
+
+Поля класса:
+`descriptionElement: HTMLElement` - элемент для подробного описания товара
+`buttonElement: HTMLButtonElement` - кнопка "В корзину"/"Удалить из корзины"
+
+Методы класса:
+`set description(value: string)` - устанавливает описание товара
+`set inBasket(value: boolean)` - меняет текст кнопки в зависимости от состояния корзины
+`setButtonDisabled(state: boolean)` - блокирует/разблокирует кнопку
+`setButtonText(text: string)` - устанавливает произвольный текст кнопки
+
+Обработчик клика по кнопке, эмитирующий событие `'product:toggle-cart'`
+
+### BasketView - отображение корзины покупок
+Назначение: Показывает список товаров в корзине, общую стоимость и кнопку оформления.
+
+Поля класса:
+`listElement: HTMLElement` - контейнер для списка товаров корзины
+`totalElement: HTMLElement` - элемент для отображения общей стоимости
+`emptyElement: HTMLElement` - элемент сообщения о пустой корзине
+`checkoutButton: HTMLButtonElement` - кнопка перехода к оформлению заказа
+
+Методы класса:
+`renderBasket(items: IProduct[], total: number)` - основной метод рендеринга корзины
+`set items(value: HTMLElement[])` - устанавливает список товаров
 `set total(value: number)` - устанавливает общую стоимость
-`set selected(items: IProduct[])` - обновляет состояние корзины
-`updateEmptyState()` - управляет отображением сообщения о пустой корзине
+`set isEmpty(value: boolean)` - управляет видимостью сообщения о пустой корзине
 
-### Card (Card.ts)
-Класс для отображения карточек товаров.
+Обработчик клика по кнопке оформления, эмитирующий событие `'basket:checkout'`
 
-Ключевые свойства:
+### BasketItemView - элемент товара в корзине
+Назначение: Отображает отдельный товар в списке корзины с возможностью удаления.
 
-`id` - уникальный идентификатор товара
-`title` - название товара
-`description` - описание товара
-`image` - изображение товара
-`category` - категория с соответствующим стилем
-`price` - цена (поддерживает значение "Бесценно")
-`selected` - состояние товара в корзине
+Поля класса:
+`indexElement: HTMLElement` - элемент для порядкового номера товара
+`deleteButton: HTMLButtonElement` - кнопка удаления товара из корзины
 
-Все классы наследуются от базового `Component`, что обеспечивает единообразие в работе с DOM-элементами и переиспользование общей логики.
+Методы класса:
+`set index(value: number)` - устанавливает порядковый номер товара
 
-## Управление бизнес логикой
+Обработчик клика по кнопке удаления, эмитирующий событие `'basket:item-remove'`
 
-### Presenter (Presenter.ts)
-Главный презентер-класс приложения, который управляет всей бизнес-логикой, координирует взаимодействие между моделями, представлениями и сервисами.
+### BaseFormView - базовая форма
+Назначение: Абстрактный базовый класс для форм с валидацией.
 
-Архитектурная роль
-Presenter реализует паттерн MVP (Model-View-Presenter) и выступает в качестве:
-Координатора между моделями данных и UI-компонентами
-Обработчика пользовательских действий
-Управляющего состоянием приложения
-Валидатора данных форм
+Поля класса:
+`submitButton: HTMLButtonElement` - кнопка отправки формы
+`errorsElement: HTMLElement` - элемент для отображения ошибок валидации
 
-graph TD
-    A[Presenter] --> B[EventEmitter]
-    A --> C[ProductModel]
-    A --> D[CartModel]
-    A --> E[BuyerModel]
-    A --> F[AppApi]
-    A --> G[Modal View]
-    A --> H[Basket View]
-    A --> I[Card Views]
+Методы класса:
+`set valid(value: boolean)` - управляет состоянием кнопки отправки
+`set errors(value: string)` - устанавливает текст ошибок валидации
 
-Приватные методы
-Инициализация
-`initViews()` - создает основные представления (модальное окно, корзину)
-`initModal()` - инициализирует модальное окно
-`initBasket()` - создает представление корзины
-`initEventListeners()` - настраивает обработчики событий
+Обработчик события отправки формы
 
-Управление товарами
-`renderProducts()` - отображает список товаров в галерее
-`createProductCard(product, container)` - создает карточку товара
-`setCardData(card, product)` - заполняет данные карточки
-`openProductModal(product)` - открывает модальное окно с деталями товара
+### OrderView - форма оформления заказа (шаг 1)
+Назначение: Форма выбора способа оплаты и ввода адреса доставки.
 
-Работа с корзиной
-`toggleCart(product)` - добавляет/удаляет товар из корзины
-`openBasket()` - открывает корзину
-`updateBasketItems()` - обновляет содержимое корзины
-`createBasketItem(item, index)` - создает элемент корзины
-`removeFromCart(id)` - удаляет товар из корзины
-`updateCart()` - обновляет счетчик корзины в хедере
+Поля класса:
+`paymentButtons: NodeListOf<HTMLButtonElement>` - кнопки выбора способа оплаты
+`addressInput: HTMLInputElement` - поле ввода адреса доставки
 
-Оформление заказа
-`openOrderForm()` - открывает форму заказа для выбора способа оплаты и ввода адреса доставки (шаг 1)
-`setupOrderForm(formElement)` - настраивает форму заказа
-`validateOrderStep()` - валидация первого шага заказа
-`openContactForm(paymentMethod, address)` - открывает форму контактов для ввода электронной почты и номера телефона (2 шаг)
-`setupContactForm(formElement, paymentMethod, address)` - настраивает форму контактов
-`validateContactStep()` - валидация второго шага заказа
+Методы класса:
+`set payment(value: string)` - устанавливает выбранный способ оплаты
+`set address(value: string)` - устанавливает значение адреса доставки
 
-Валидация и утилиты
-`validateEmail(email)` - проверяет корректность email
-`validatePhone(phone)` - проверяет корректность телефона
-`showSuccessModal(total)` - показывает окно успешного заказа
+Обработчики изменения способа оплаты и ввода адреса
 
-Отправка данных
-`submitOrder(orderData)` - отправляет заказ на сервер и обрабатывает результат
+Эмитирует события `'order:payment-change'` и `'order:address-change'`
+
+### ContactsView - форма контактных данных (шаг 2)
+Назначение: Форма ввода email и телефона для завершения оформления заказа.
+
+Поля класса:
+`emailInput: HTMLInputElement` - поле ввода email
+`phoneInput: HTMLInputElement` - поле ввода телефона
+
+Методы класса:
+`set email(value: string)` - устанавливает значение email
+`set phone(value: string)` - устанавливает значение телефона
+
+Обработчики изменения email и телефона
+
+Эмитирует события `'contacts:email-change'` и `'contacts:phone-change'`
+
+### SuccessView - окно успешного оформления заказа
+Назначение: Отображает подтверждение успешного оформления заказа с суммой списания.
+
+Поля класса:
+`closeButton: HTMLButtonElement` - кнопка закрытия окна успеха
+`descriptionElement: HTMLElement` - элемент для отображения суммы списания
+
+Методы класса:
+`set total(value: number)` - устанавливает сумму списания в сообщении
+
+Обработчик клика по кнопке закрытия, эмитирующий событие `'success:close'`
+
+Все классы представлений наследуются от базового класса `Component`, что обеспечивает единообразную работу с DOM-элементами и переиспользование общей логики рендеринга.
 
 
-## Структура приложения
-.
-├── css
-├── index.html
-├── package.json
-├── package-lock.json
-├── public
-│   ├── < Картинки >
-├── README.md
-├── src
-│   ├── common.blocks
-│   │   ├── basket.scss
-│   │   ├── < остальные файлы scss >
-│   ├── components
-│   │   ├── AppApi.ts
-│   │   ├── base
-│   │   │   ├── Api.ts
-│   │   │   ├── Component.ts
-│   │   │   └── Events.ts
-│   │   ├── models
-│   │   │   ├── BuyerModel.ts
-│   │   │   ├── CartModel.ts
-│   │   │   └── ProductModel.ts
-│   │   ├── Presenter.ts
-│   │   └── view
-│   │       ├── Basket.ts
-│   │       ├── Modal.ts
-│   │       └── Сard.ts
-│   ├── images
-│   │   ├── logo.svg
-│   │   ├── shopping_cart.svg
-│   │   ├── Subtract.png
-│   │   ├── Subtract.svg
-│   │   ├── trash-2.svg
-│   │   ├── trash.svg
-│   │   └── x-circle.svg
-│   ├── main.ts
-│   ├── pages
-│   │   └── index.html
-│   ├── scss
-│   │   ├── mixins
-│   │   │   ├── _background.scss
-│   │   │   ├── _container.scss
-│   │   │   ├── _fix.scss
-│   │   │   ├── _icon.scss
-│   │   │   ├── _index.scss
-│   │   │   └── _interactive.scss
-│   │   ├── styles.scss
-│   │   └── _variables.scss
-│   ├── types
-│   │   └── index.ts
-│   ├── utils
-│   │   ├── constants.ts
-│   │   ├── data.ts
-│   │   └── utils.ts
-│   ├── vendor
-│   │   ├── garamond
-│   │   │   ├── EBGaramond-Regular.ttf
-│   │   │   ├── EBGaramond-Regular.woff2
-│   │   │   └── index.css
-│   │   ├── glyphter
-│   │   │   ├── Glyphter.eot
-│   │   │   ├── Glyphter.svg
-│   │   │   ├── Glyphter.ttf
-│   │   │   ├── Glyphter.woff
-│   │   │   └── index.css
-│   │   ├── normalize.css
-│   │   └── ys-text
-│   │       ├── index.css
-│   │       ├── <шрифты>
-│   └── vite-env.d.ts
-├── tsconfig.json
-└── vite.config.ts
+## Архитектурная схема приложения
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        MAIN.TS (Presenter)                      │
+│  Координатор всех событий и взаимодействий между компонентами   │
+└─────────────────┬─────────────────┬─────────────────┬───────────┘
+                  │                 │                 │
+                  ▼                 ▼                 ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│    MODELS       │ │      VIEWS      │ │       API       │
+├─────────────────┤ ├─────────────────┤ ├─────────────────┤
+│ • ProductModel  │ │ • HeaderView    │ │ • AppApi        │
+│ • CartModel     │ │ • GalleryView   │ │ • Api (base)    │
+│ • BuyerModel    │ │ • ModalView     │ │                 │
+└─────────────────┘ │ • BasketView    │ └─────────────────┘
+                    │ • OrderView     │
+                    │ • ContactsView  │
+                    │ • SuccessView   │
+                    └─────────────────┘
+
+## Детальная схема взаимодействия
+### 1. Инициализация приложения
+
+main.ts → initApp() → AppApi.getProductList() → ProductModel.setItems() → 'products:changed'
+### 2. Просмотр товаров
+
+GalleryView (клик по товару) → 'card:select' 
+→ main.ts → ProductPreviewView → ModalView.open()
+### 3. Работа с корзиной
+
+ProductPreviewView (кнопка) → 'product:toggle-cart' 
+→ main.ts → CartModel.addItem()/removeItem() → 'cart:change'
+→ HeaderView.counter обновляется
+### 4. Оформление заказа
+
+BasketView (оформить) → 'basket:checkout' 
+→ main.ts → OrderView → ModalView.open()
+### 5. Двухэтапное оформление
+
+OrderView → 'order:submit' → main.ts → ContactsView → ModalView.open()
+ContactsView → 'contacts:submit' → main.ts → AppApi.createOrder() → SuccessView
+Схема событийной системы
+text
+┌─────────────┐    Events    ┌─────────────┐
+│    VIEWS    │─────────────▶│   MAIN.TS   │
+│             │◀─────────────│             │
+└─────────────┘              └─────────────┘
+                                    │
+                                    │ Events
+                                    ▼
+┌─────────────┐              ┌─────────────┐
+│   MODELS    │◀─────────────│    API      │
+│             │─────────────▶│             │
+└─────────────┘    Data      └─────────────┘
+

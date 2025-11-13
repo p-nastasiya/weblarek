@@ -15,12 +15,24 @@ export interface IProduct {
 	price: number | null;
 }
 
+export interface IProductModel {
+	setItems(items: IProduct[]): void;
+	getItems(): IProduct[];
+	getItem(id: string): IProduct | undefined;
+}
+
 // Покупатель
 export interface IBuyer {
 	payment: string; // 'card' или 'cash'
 	email: string;
 	phone: string;
 	address: string;
+}
+
+export interface IBuyerModel {
+	setData(data: Partial<IBuyer>): void;
+	getData(): Partial<IBuyer>;
+	clear(): void;
 }
 
 // Данные для отправки заказа на сервер
@@ -31,6 +43,16 @@ export interface IOrder {
 	payment: PaymentMethod;
 	items: string[];
 	total: number;
+}
+
+export interface ICartModel {
+	getItems(): IProduct[];
+	addItem(item: IProduct): void;
+	removeItem(id: string): void;
+	clear(): void;
+	getTotal(): number;
+	getCount(): number;
+	hasItem(id: string): boolean;
 }
 
 export type PaymentMethod = 'card' | 'cash';
