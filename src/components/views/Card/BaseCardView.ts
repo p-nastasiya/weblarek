@@ -7,20 +7,23 @@ export interface IBaseCard {
 	price: number | null;
 }
 
-// Card работает с данными товара IProduct (поля: название и цена)
 export class BaseCardView<T extends IBaseCard = IBaseCard> extends Component<T> {
 	protected titleElement: HTMLElement;
 	protected priceElement: HTMLElement;
-	protected _id: string = '';
+	protected _id: string;
 
 	constructor(container: HTMLElement) {
 		super(container);
 
 		this.titleElement = ensureElement<HTMLElement>('.card__title', container);
 		this.priceElement = ensureElement<HTMLElement>('.card__price', container);
+		this._id = '';
 	}
 
-
+	set id(value: string) {
+		this._id = value;
+	}
+	
 	set title(value: string) {
 		this.setText(this.titleElement, value);
 	}
@@ -32,14 +35,6 @@ export class BaseCardView<T extends IBaseCard = IBaseCard> extends Component<T> 
 			this.setText(this.priceElement, `${value} синапсов`);
 		}
 	}
-
-    set id(value: string) {
-        this._id = value; // Сохраняем в поле, а не в сеттер
-    }
-
-    get id(): string {
-        return this._id;
-    }
 
 }
 

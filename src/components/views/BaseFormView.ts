@@ -1,4 +1,5 @@
 // BaseFormView.ts
+import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 
@@ -14,12 +15,12 @@ export abstract class BaseFormView<T extends IForm> extends Component<T> {
 	constructor(protected events: IEvents, container: HTMLElement) {
 		super(container);
 
-		this.submitButton = this.container.querySelector('button[type="submit"]')!;
-		this.errorsElement = this.container.querySelector('.form__errors')!;
+		this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
+		this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
 
-		this.container.addEventListener('submit', (event) => {
-			event.preventDefault();
-			this.events.emit(this.getSubmitEventName());
+		this.container.addEventListener('submit', (e: Event) => {
+			e.preventDefault();
+			this.events.emit(`${this.getSubmitEventName()}`);
 		});
 	}
 

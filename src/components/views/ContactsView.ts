@@ -1,6 +1,7 @@
 // ContactsView.ts
 import { BaseFormView, IForm } from './BaseFormView';
 import { IEvents } from '../base/Events';
+import { ensureElement } from '../../utils/utils';
 
 interface IContacts extends IForm {
 	email: string;
@@ -14,13 +15,9 @@ export class ContactsView extends BaseFormView<IContacts> {
 	constructor(protected events: IEvents, container: HTMLElement) {
 		super(events, container);
 
-		this.emailInput = this.container.querySelector('input[name="email"]')!;
-		this.phoneInput = this.container.querySelector('input[name="phone"]')!;
+		this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container);
+		this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container);
 
-		this.setupEventListeners();
-	}
-
-	private setupEventListeners() {
 		this.emailInput.addEventListener('input', () => {
 			this.events.emit('contacts:email-change', { email: this.emailInput.value });
 		});

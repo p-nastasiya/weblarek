@@ -419,132 +419,169 @@ constructor(api: Api) { this.api = api; }
 
 ```mermaid
 graph TB
-    A[MAIN.TS<br/>Presenter] --> B[MODELS]
-    A --> C[VIEWS]
-    A --> D[API]
+    subgraph "Слой данных (Models)"
+        PM[ProductModel]
+        CM[CartModel]
+        BM[BuyerModel]
+    end
     
-    B --> B1[ProductModel]
-    B --> B2[CartModel]
-    B --> B3[BuyerModel]
+    subgraph "Слой представления (Views)"
+        HV[HeaderView]
+        GV[GalleryView]
+        MV[ModalView]
+        BV[BasketView]
+        OV[OrderView]
+        CV[ContactsView]
+        SV[SuccessView]
+    end
     
-    C --> C1[HeaderView]
-    C --> C2[GalleryView]
-    C --> C3[ModalView]
-    C --> C4[BasketView]
-    C --> C5[OrderView]
-    C --> C6[ContactsView]
-    C --> C7[SuccessView]
+    subgraph "Слой коммуникации"
+        API[AppApi]
+    end
     
-    D --> D1[AppApi]
-    D --> D2[Api base]
+    P[Presenter<br/>main.ts] --> PM
+    P --> CM
+    P --> BM
+    P --> HV
+    P --> GV
+    P --> MV
+    P --> BV
+    P --> OV
+    P --> CV
+    P --> SV
+    P --> API
+    
+    API --> Server[(Backend<br/>Server)]
 ```
 
 ## Детальная схема взаимодействия
 
-### 1. Инициализация приложения
+### 1. Загрузка и отображение товаров
 
 ```mermaid
 sequenceDiagram
-    participant M as main.ts
-    participant A as AppApi
+    participant U as Пользователь
+    participant P as Presenter<br/>main.ts
+    participant API as AppApi
     participant PM as ProductModel
+    participant GV as GalleryView
     
-    M->>A: getProductList()
-    A->>PM: setItems()
-    PM->>M: 'products:changed' event
+    U->>P: Открытие страницы
+    P->>API: getProductList()
+    API->>P: Список товаров
+    P->>PM: setItems()
+    PM->>P: 'products:changed'
+    P->>GV: render(items)
+    GV->>U: Отображение каталога
 ```
 
 ### 2. Просмотр товаров
 
 ```mermaid
 sequenceDiagram
-    participant G as GalleryView
-    participant M as main.ts
-    participant P as ProductPreviewView
+    participant U as Пользователь
+    participant GV as GalleryView
+    participant P as Presenter<br/>main.ts
+    participant PM as ProductModel
     participant MV as ModalView
+    participant PV as ProductPreviewView
     
-    G->>M: 'card:select' event
-    M->>P: render product
-    M->>MV: open()
+    U->>GV: Клик по карточке
+    GV->>P: 'card:select'
+    P->>PM: setSelectedProduct()
+    PM->>P: 'product:selected'
+    P->>PV: render(product)
+    P->>MV: open()
+    MV->>U: Открытие модального окна
 ```
 
 ### 3. Работа с корзиной
 
 ```mermaid
 sequenceDiagram
-    participant P as ProductPreviewView
-    participant M as main.ts
-    participant CM as CartModel
-    participant H as HeaderView
     
-    P->>M: 'product:toggle-cart' event
-    M->>CM: addItem()/removeItem()
-    CM->>M: 'cart:change' event
-    M->>H: update counter
+    participant U as Пользователь
+    participant PV as ProductPreviewView
+    participant P as Presenter<br/>main.ts
+    participant CM as CartModel
+    participant HV as HeaderView
+    participant BV as BasketView
+    
+    U->>PV: Клик "В корзину"
+    PV->>P: 'product:toggle-cart'
+    P->>CM: addItem()
+    CM->>P: 'cart:change'
+    P->>HV: update counter
+    P->>BV: update items
+    HV->>U: Обновление счетчика
 ```
 
 ### 4. Оформление заказа
 
 ```mermaid
 sequenceDiagram
-    participant B as BasketView
-    participant M as main.ts
-    participant O as OrderView
-    participant MV as ModalView
+    participant U as Пользователь
+    participant BV as BasketView
+    participant P as Presenter<br/>main.ts
+    participant OV as OrderView
+    participant CV as ContactsView
+    participant API as AppApi
+    participant SV as SuccessView
     
-    B->>M: 'basket:checkout' event
-    M->>O: render order form
-    M->>MV: open()
-```
-
-### 5. Двухэтапное оформление
-
-```mermaid
-sequenceDiagram
-    participant O as OrderView
-    participant M as main.ts
-    participant C as ContactsView
-    participant A as AppApi
-    participant S as SuccessView
+    U->>BV: "Оформить заказ"
+    BV->>P: 'basket:checkout'
+    P->>OV: render()
+    P->>Modal: open()
     
-    O->>M: 'order:submit' event
-    M->>C: render contacts form
-    M->>MV: open()
-    C->>M: 'contacts:submit' event
-    M->>A: createOrder()
-    A->>M: order confirmation
-    M->>S: show success
-```
-
-## Схема событийной системы
-
-```mermaid
-graph LR
-    V[VIEWS] -->|Events| M[MAIN.TS]
-    M -->|Events| V
+    U->>OV: Заполнение данных
+    OV->>P: 'order:submit'
+    P->>CV: render()
     
-    M -->|Events| Mo[MODELS]
-    Mo -->|Data| M
-    
-    A[API] -->|Data| Mo
-    Mo -->|Events| A
+    U->>CV: Заполнение контактов
+    CV->>P: 'contacts:submit'
+    P->>API: createOrder()
+    API->>P: Подтверждение заказа
+    P->>SV: render()
+    P->>Modal: open()
 ```
 
 ## Основные события приложения
 
-- `'products:changed'` - изменение списка товаров
-- `'card:select'` - выбор товара для просмотра
-- `'product:toggle-cart'` - добавление/удаление товара из корзины
-- `'cart:change'` - изменение содержимого корзины
-- `'basket:open'` - открытие корзины
-- `'basket:item-remove'` - удаление товара из корзины
-- `'basket:checkout'` - переход к оформлению заказа
-- `'order:payment-change'` - изменение способа оплаты
-- `'order:address-change'` - изменение адреса доставки
-- `'order:submit'` - отправка первого шага заказа
-- `'contacts:email-change'` - изменение email
-- `'contacts:phone-change'` - изменение телефона
-- `'contacts:submit'` - отправка второго шага заказа
-- `'success:close'` - закрытие окна успеха
-- `'modal:open'` - открытие модального окна
-- `'modal:close'` - закрытие модального окна
+
+## 📦 События товаров
+
+| Событие | Описание |
+|---------|----------|
+| `'products:changed'` | Изменен список товаров |
+| `'card:select'` | Выбор товара для просмотра |
+| `'product:selected'` | Товар выбран для детального просмотра |
+| `'product:toggle-cart'` | Добавление/удаление из корзины |
+
+## 🛒 События корзины
+
+| Событие | Описание |
+|---------|----------|
+| `'cart:change'` | Изменено содержимое корзины |
+| `'basket:open'` | Открытие корзины |
+| `'basket:item-remove'` | Удаление товара из корзины |
+| `'basket:checkout'` | Переход к оформлению заказа |
+
+## 📝 События заказа
+
+| Событие | Описание |
+|---------|----------|
+| `'order:payment-change'` | Изменение способа оплаты |
+| `'order:address-change'` | Изменение адреса доставки |
+| `'order:submit'` | Отправка данных заказа (шаг 1) |
+| `'contacts:email-change'` | Изменение email покупателя |
+| `'contacts:phone-change'` | Изменение телефона покупателя |
+| `'contacts:submit'` | Отправка контактных данных (шаг 2) |
+
+## 🎨 События UI
+
+| Событие | Описание |
+|---------|----------|
+| `'modal:open'` | Открытие модального окна |
+| `'modal:close'` | Закрытие модального окна |
+| `'buyer:data-change'` | Изменение данных покупателя |
+| `'buyer:data-cleared'` | Очистка данных покупателя |

@@ -33,6 +33,7 @@ export interface IBuyerModel {
 	setData(data: Partial<IBuyer>): void;
 	getData(): Partial<IBuyer>;
 	clear(): void;
+	validate(): Record<string, string>;
 }
 
 // Данные для отправки заказа на сервер

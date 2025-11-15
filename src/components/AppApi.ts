@@ -23,9 +23,4 @@ export class AppApi {
 	async createOrder(order: IOrder): Promise<{ id: string, total: number }> {
 		return await this.api.post<{ id: string, total: number }>('/order', order);
 	}
-
-	// Геттер для baseUrl (для отладки)
-	get baseUrl(): string {
-		return this.api.baseUrl;
-	}
 }

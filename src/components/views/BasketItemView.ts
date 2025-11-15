@@ -1,3 +1,4 @@
+import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
 import { BaseCardView, IBaseCard } from './Card/BaseCardView';
 
@@ -12,12 +13,11 @@ export class BasketItemView extends BaseCardView<IBasketItem> {
 	constructor(protected events: IEvents, container: HTMLElement) {
 		super(container);
 
-		this.indexElement = this.container.querySelector('.basket__item-index')!;
-		this.deleteButton = this.container.querySelector('.basket__item-delete')!;
+		this.indexElement = ensureElement<HTMLElement>('.basket__item-index', this.container);
+		this.deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', this.container);
 
 		this.deleteButton.addEventListener('click', () => {
-			// Передаем объект с id вместо строки
-			this.events.emit('basket:item-remove', { id: this.container.dataset.id });
+			this.events.emit('basket:item-remove', { id: this._id });
 		});
 	}
 

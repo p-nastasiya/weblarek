@@ -26,23 +26,16 @@ export class ModalView extends Component<IModal> {
 		});
 	}
 
-	// Геттер для доступа к container извне
-	get modalContainer(): HTMLElement {
-		return this.container;
-	}
-
 	set content(value: HTMLElement) {
 		this.contentElement.replaceChildren(value);
 	}
 
 	open() {
 		this.container.classList.add('modal_active');
-		this.events.emit('modal:open');
 	}
 
 	close() {
 		this.container.classList.remove('modal_active');
 		this.contentElement.innerHTML = '';
-		this.events.emit('modal:close');
 	}
 }

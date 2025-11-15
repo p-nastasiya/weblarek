@@ -1,7 +1,5 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
-import { IProduct } from '../../types';
-import { BasketItemView } from './BasketItemView';
 
 interface IBasket {
 	items: HTMLElement[];
@@ -26,35 +24,6 @@ export class BasketView extends Component<IBasket> {
 		this.checkoutButton.addEventListener('click', () => {
 			this.events.emit('basket:checkout');
 		});
-	}
-
-	// Метод для рендеринга корзины с товарами
-	renderBasket(items: IProduct[], total: number): HTMLElement {
-		const itemElements = items.map((product, index) => {
-			return this.createBasketItem(product, index + 1);
-		});
-
-		this.items = itemElements;
-		this.total = total;
-		this.isEmpty = items.length === 0;
-
-		return this.container;
-	}
-
-	// Приватный метод для создания элемента корзины
-	private createBasketItem(product: IProduct, index: number): HTMLElement {
-		const template = document.getElementById('card-basket') as HTMLTemplateElement;
-		const itemElement = template.content.cloneNode(true) as DocumentFragment;
-		const itemContainer = itemElement.firstElementChild as HTMLElement;
-
-		const itemView = new BasketItemView(this.events, itemContainer);
-
-		itemView.title = product.title;
-		itemView.price = product.price;
-		itemView.index = index;
-		itemContainer.dataset.id = product.id;
-
-		return itemContainer;
 	}
 
 	set items(value: HTMLElement[]) {

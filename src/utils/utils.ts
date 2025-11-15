@@ -44,12 +44,9 @@ export function ensureElement<T extends HTMLElement>(selectorElement: SelectorEl
 	throw new Error('Unknown selector element');
 }
 
-export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplateElement): T {
-	const template = ensureElement(query) as HTMLTemplateElement;
-	if (!template.content.firstElementChild) {
-		throw new Error(`Template ${query} has no content`);
-	}
-	return template.content.firstElementChild.cloneNode(true) as T;
+export function cloneTemplate(template: HTMLTemplateElement): HTMLElement {
+    const content = template.content.cloneNode(true) as DocumentFragment;
+    return content.firstElementChild as HTMLElement;
 }
 
 export function bem(block: string, element?: string, modifier?: string): { name: string, class: string } {

@@ -1,6 +1,7 @@
 // OrderView.ts
 import { BaseFormView, IForm } from './BaseFormView';
 import { IEvents } from '../base/Events';
+import { ensureAllElements, ensureElement } from '../../utils/utils';
 
 interface IOrder extends IForm {
 	payment: string;
@@ -8,26 +9,21 @@ interface IOrder extends IForm {
 }
 
 export class OrderView extends BaseFormView<IOrder> {
-	protected paymentButtons: NodeListOf<HTMLButtonElement>;
+	protected paymentButtons: HTMLButtonElement[];
 	protected addressInput: HTMLInputElement;
 
 	constructor(protected events: IEvents, container: HTMLElement) {
 		super(events, container);
 
-		this.paymentButtons = this.container.querySelectorAll('button[name]');
-		this.addressInput = this.container.querySelector('input[name="address"]')!;
+		this.paymentButtons = ensureAllElements<HTMLButtonElement>('button[name]', this.container);
+		this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.container);
 
-		this.setupEventListeners();
-	}
-
-	private setupEventListeners() {
 		this.paymentButtons.forEach(button => {
-			button.addEventListener('click', () => {
-				// Добавляем визуальное выделение выбранной кнопки
-				this.paymentButtons.forEach(btn => btn.classList.remove('button_alt-active'));
-				button.classList.add('button_alt-active');
-
-				this.events.emit('order:payment-change', { payment: button.name });
+			button.addEventListener('click', (e: Event) => {
+				e.preventDefault();
+				const target = e.target as HTMLButtonElement;
+				const paymentMethod = target.name;
+				this.events.emit('order:payment-change', { payment: paymentMethod });
 			});
 		});
 
